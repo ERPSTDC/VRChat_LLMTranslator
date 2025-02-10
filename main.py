@@ -1,5 +1,4 @@
 import cv2
-import pyautogui
 import json
 import os
 import pytesseract
@@ -10,7 +9,6 @@ import tkinter as tk
 import threading
 from openai import OpenAI
 import sys
-import shutil
 pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 
 #读取config配置文件
