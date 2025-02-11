@@ -6,16 +6,29 @@ import numpy as np
 import time
 from datetime import datetime
 import tkinter as tk
+from tkinter import messagebox
 import threading
 from openai import OpenAI
 import sys
 pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 
+#定义出现严重错误之后的警告提示框
+def error_close(mes):
+    messagebox.showerror(f"{mes}")
+    on_closing()
+
 #读取config配置文件
 def load_config(file_path):
-    with open(file_path, 'r', encoding='utf-8') as file:
-        config = json.load(file)
-    return config
+    try:
+        print(f"正在加载配置文件: {file_path}")
+        with open(file_path, 'r', encoding='utf-8') as file:
+            config = json.load(file)
+        print("配置文件加载成功")
+        return config
+    except Exception as e:
+        print(f"加载配置文件失败: {e}")
+        error_close(e)
+        raise
 
 #从config.json获取config字典
 config = load_config('config.json')
@@ -28,6 +41,16 @@ md = config['model']
 
 #定义图片读取路径
 picture_path = config['picture_path']
+
+# 检查路径是否存在
+def check_path(path):
+    if not os.path.exists(path):
+        print(f"路径不存在: {path}")
+        error_close("图片路径不存在！")
+        raise FileNotFoundError(f"路径不存在: {path}")
+    print(f"路径检查通过: {path}")
+
+check_path(picture_path)
 
 client = OpenAI(
     api_key=os.getenv("DASHSCOPE_API_KEY"), 
@@ -48,7 +71,7 @@ text_box.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
 def on_closing():
     global stop_thread
     stop_thread = True  # 让 `main()` 里的循环退出
-    print("窗口关闭，程序退出")
+    #print("窗口关闭，程序退出")
     root.destroy()  # 关闭 Tkinter 窗口
     sys.exit()  # 终止整个 Python 进程
 
