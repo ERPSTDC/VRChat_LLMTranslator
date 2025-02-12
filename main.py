@@ -18,7 +18,15 @@ import logging
 # 配置日志记录到文件
 logging.basicConfig(level=logging.DEBUG,
                     format='%(asctime)s - %(levelname)s - %(message)s',
-                    handlers=[logging.FileHandler('app.log', mode='w'),])  # 也可以同时输出到控制台
+                    handlers=[logging.FileHandler('app.log', mode='w'),])
+
+#定义终止程序
+def on_closing():
+    global stop_thread
+    stop_thread = True  # 让 `main()` 里的循环退出
+    #print("窗口关闭，程序退出")
+    root.destroy()  # 关闭 Tkinter 窗口
+    sys.exit()  # 终止整个 Python 进程
 
 stop_thread = False
 
@@ -64,10 +72,11 @@ check_path(picture_path)
 
 #检查tesseract是否安装
 def check_tesseract():
-    if not os.path.exists('C:\Program Files\Tesseract-OCR'):
+    if not os.path.exists('C:\\Program Files\\Tesseract-OCR\\'):
         error_close("Trsseract安装路径未找到")
-    elif not os.path.exists('C:\Program Files\Tesseract-OCR\tessdata'):
-        error_close("tessdata文件夹未找到")
+    else:
+        if not os.path.exists('C:\\Program Files\\Tesseract-OCR\\tessdata\\'):
+            error_close("tessdata文件夹未找到")
 
 check_tesseract()
 
@@ -86,13 +95,6 @@ root.geometry("1000x455")
 text_box = tk.Text(root, wrap=tk.WORD)
 text_box.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
 
-#定义终止程序
-def on_closing():
-    global stop_thread
-    stop_thread = True  # 让 `main()` 里的循环退出
-    #print("窗口关闭，程序退出")
-    root.destroy()  # 关闭 Tkinter 窗口
-    sys.exit()  # 终止整个 Python 进程
 
 #定义循环的主程序
         #思路：检查路径下是否有图片，若有就读取，然后cv2处理，然后ocr识别，然后丢给ds翻译，然后回传字段并更新messagebox
@@ -187,7 +189,7 @@ def main(path):
                     text_box.yview(tk.END)
 
                 # 删除已经扫描过的图片
-                #os.remove('%s/%s' % (picture_path, image_files[0]))
+                os.remove('%s/%s' % (picture_path, image_files[0]))
                 print(f"已删除图片: {image_files[0]}")
             else:
                 print("未找到图片文件")
