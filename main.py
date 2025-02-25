@@ -59,6 +59,7 @@ md = config['model']
 
 #定义图片读取路径
 picture_path = config['picture_path']
+picture_path = '%s\\steam.app.438100' %picture_path
 
 # 检查路径是否存在
 def check_path(path):
@@ -167,8 +168,9 @@ def main(path):
                         print("开始调用API翻译")
                         completion = client.chat.completions.create(
                             model=md,
+                            temperature=0,
                             messages=[
-                                {'role': 'user', 'content': f'翻译成中文,输出成一行，若原文疑似缺失则自动补全，不要回复任何提示:{text}'}
+                                {'role': 'user', 'content': f'尽快翻译成中文,输出成一行，若原文疑似缺失则自动补全，不要回复任何提示:{text}'}
                             ]
                         )
                         out_sentence = completion.choices[0].message.content

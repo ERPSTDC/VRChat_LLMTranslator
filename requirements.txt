@@ -2,3 +2,4 @@ cv2
 pytesseract
 tkinter
 openai
+numpy
