@@ -96,21 +96,36 @@ root.geometry("1000x455")
 text_box = tk.Text(root, wrap=tk.WORD)
 text_box.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
 
+picture_exist=1 #表示是否找到图片的参数”
+empty_printted=0 #表示是否打印过未找到图片的提示的参数
 
 #定义循环的主程序
         #思路：检查路径下是否有图片，若有就读取，然后cv2处理，然后ocr识别，然后丢给ds翻译，然后回传字段并更新messagebox
 def main(path):
+    global picture_exist
+    global empty_printted
     global stop_thread
     error_count = 0  # 初始化错误计数器
     while not stop_thread:
         try:
-            print("开始扫描图片目录")
+            #print("开始扫描图片目录")
             # 获取目标路径下的所有图片文件的名字并组成列表
             filels = os.listdir(path)
             image_files = [f for f in filels if f.lower().endswith(('.jpg', '.png', '.jpeg'))]
-            print(f"找到图片文件: {image_files}")
+            if image_files:
+                picture_exist=1
+            else:
+                picture_exist=0
+            if picture_exist==1:
+                print(f"找到图片文件: {image_files}")
+                empty_printted=0
             # 如果存在图片文件就对文件列表的第一个文件执行：
             if image_files:
+                ############显然，superscreenshotterVR一次会截两张图，一张普通的一张VR的。我们需要删掉VR视角的图片：
+                if 'vr' in image_files[0]:
+                    os.remove('%s/%s' % (picture_path, image_files[0]))
+                    continue
+                ############
                 aria_out = True
                 time.sleep(1)  # 等待1秒，防止图片保存到一半就被读取，抛出文件损坏异常
                 # 用cv2打开图片
@@ -194,7 +209,11 @@ def main(path):
                 os.remove('%s/%s' % (picture_path, image_files[0]))
                 print(f"已删除图片: {image_files[0]}")
             else:
-                print("未找到图片文件")
+                if empty_printted==0:
+                    print("未找到图片文件")
+                    empty_printted=1
+                else:
+                    pass
             time.sleep(0.2)
         except Exception as e:
             print(f"主程序运行失败: {e}")
