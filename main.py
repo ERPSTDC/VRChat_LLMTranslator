@@ -98,6 +98,7 @@ text_box.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
 
 picture_exist=1 #表示是否找到图片的参数”
 empty_printted=0 #表示是否打印过未找到图片的提示的参数
+scanned_picture=[]
 
 #定义循环的主程序
         #思路：检查路径下是否有图片，若有就读取，然后cv2处理，然后ocr识别，然后丢给ds翻译，然后回传字段并更新messagebox
@@ -105,6 +106,7 @@ def main(path):
     global picture_exist
     global empty_printted
     global stop_thread
+    global scanned_picture
     error_count = 0  # 初始化错误计数器
     while not stop_thread:
         try:
@@ -112,27 +114,29 @@ def main(path):
             # 获取目标路径下的所有图片文件的名字并组成列表
             filels = os.listdir(path)
             image_files = [f for f in filels if f.lower().endswith(('.jpg', '.png', '.jpeg'))]
-            if image_files:
+            right_picture=[x for x in image_files if x not in scanned_picture]
+            if right_picture:
                 picture_exist=1
             else:
                 picture_exist=0
             if picture_exist==1:
-                print(f"找到图片文件: {image_files}")
+                print(f"找到图片文件: {right_picture}")
                 empty_printted=0
             # 如果存在图片文件就对文件列表的第一个文件执行：
-            if image_files:
+            if right_picture:
                 ############显然，superscreenshotterVR一次会截两张图，一张普通的一张VR的。我们需要删掉VR视角的图片：
-                if 'vr' in image_files[0]:
-                    os.remove('%s/%s' % (picture_path, image_files[0]))
+                if 'vr' in right_picture[0]:
+                    #os.remove('%s/%s' % (picture_path, image_files[0]))
+                    scanned_picture.append(right_picture[0])
                     continue
                 ############
                 aria_out = True
                 time.sleep(1)  # 等待1秒，防止图片保存到一半就被读取，抛出文件损坏异常
                 # 用cv2打开图片
-                inpicture = cv2.imread('%s/%s' % (picture_path, image_files[0]))
+                inpicture = cv2.imread('%s/%s' % (picture_path, right_picture[0]))
                 if inpicture is None:
                     print("图片读取失败，文件可能损坏")
-                    os.remove('%s/%s' % (picture_path, image_files[0]))
+                    os.remove('%s/%s' % (picture_path, right_picture[0]))
                     error_count += 1  # 增加错误计数
                     if error_count >= 8:  # 如果错误计数达到8次
                         #显示提示
@@ -178,6 +182,11 @@ def main(path):
                         print("开始OCR识别")
                         text = pytesseract.image_to_string(blurred_image,lang='chi_sim+eng+jpn+kor+deu+rus')  # 调用OCR函数
                         print(f"OCR识别结果: {text}")
+                        if not text:
+                            text_box.insert(tk.END, '[没有识别出文字]\n')
+                            text_box.yview(tk.END)
+                            scanned_picture.append(right_picture[0])
+                            continue
 
                         # 调用API翻译
                         print("开始调用API翻译")
@@ -206,8 +215,10 @@ def main(path):
                     text_box.yview(tk.END)
 
                 # 删除已经扫描过的图片
-                os.remove('%s/%s' % (picture_path, image_files[0]))
-                print(f"已删除图片: {image_files[0]}")
+                #os.remove('%s/%s' % (picture_path, image_files[0]))
+                #print(f"已删除图片: {image_files[0]}")
+                scanned_picture.append(right_picture[0])
+                #print(f"已扫描图片列表: {scanned_picture}")
             else:
                 if empty_printted==0:
                     print("未找到图片文件")
