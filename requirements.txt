@@ -1,5 +1,4 @@
-cv2
+opencv-python
 pytesseract
-tkinter
 openai
 numpy
